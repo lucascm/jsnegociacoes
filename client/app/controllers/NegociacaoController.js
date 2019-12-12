@@ -5,9 +5,9 @@ class NegociacaoController {
         this._inputData = $("#data");
         this._inpuQuantidade = $("#quantidade");
         this._inputValor = $("#valor");
-        debugger;
         this._negociacoes = new Bind(new Negociacoes(), new NegociacoesView("#negociacoes"), 'adiciona','esvazia');
         this._mensagem = new Bind(new Mensagem(), new MensagemView("#mensagemView"), 'texto');
+        this._service = new NegociacaoService();
     }
     _criaNegociacao() {
         let data = DataConverter.paraData(this._inputData.value);
@@ -22,11 +22,29 @@ class NegociacaoController {
         this._inputValor.value = 0.0;
         this._inputData.focus();
     }
+    importaNegociacoes() {
+        this._service.obterNegociacoesDoPeriodo()
+            .then(negociacoes => {
+                negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao));
+            })
+            .catch(err => this._mensagem.texto = err);
+        
+    }
     adiciona(event) {
-        event.preventDefault();
-        this._negociacoes.adiciona(this._criaNegociacao());
-        this._mensagem.texto = "Negociação incluída com sucesso!";
-        this._limpaFormulario();
+        try {
+            event.preventDefault();
+            this._negociacoes.adiciona(this._criaNegociacao());
+            this._mensagem.texto = "Negociação incluída com sucesso!";
+            this._limpaFormulario();
+        } catch (e) {
+            console.error(e);
+            console.log(e.stack);
+            if (e instanceof DataInvalidaException) {
+                this._mensagem.texto = e.message;
+            } else [
+                this._mensagem.texto = "Um erro inesperado aconteceu. Entre em contato com o suporte. Ref: adiciona()"
+            ]
+        }
     }
 
     apaga() {

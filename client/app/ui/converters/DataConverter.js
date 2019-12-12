@@ -8,10 +8,10 @@ class DataConverter {
     static paraData(dataStr) {
         // recebe "2019-12-07"
         // retorna new Date(2019, 11, 07)
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
-            throw new Error("A data deve estar no formato aaaa-mm-dd");
+        if (!/\d{2}\/\d{2}\/\d{4}$/.test(dataStr)) {
+            throw new DataInvalidaException();
         }
-        return new Date(...dataStr.split("-").map((item, indice) => item - indice % 2));
+        return new Date(...dataStr.split("/").reverse().map((item, indice) => item - indice % 2));
 
     }
 }
