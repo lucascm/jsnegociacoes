@@ -4,7 +4,7 @@ System.register([], function (_export, _context) {
     return {
         setters: [],
         execute: function () {
-            class ProxyFactory {
+            let ProxyFactory = class ProxyFactory {
                 /**
                  * 
                  * @param {*} objeto = Objeto alvo do proxy
@@ -38,7 +38,7 @@ System.register([], function (_export, _context) {
                 static _ehFuncao(fn) {
                     return typeof fn === typeof Function;
                 }
-            }
+            };
 
             _export("ProxyFactory", ProxyFactory);
         }

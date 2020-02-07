@@ -9,7 +9,7 @@ System.register(['./View.js', '../converters/DataConverter.js'], function (_expo
             DataConverter = _convertersDataConverterJs.DataConverter;
         }],
         execute: function () {
-            class NegociacoesView extends View {
+            let NegociacoesView = class NegociacoesView extends View {
 
                 template(model) {
                     return `
@@ -42,7 +42,7 @@ System.register(['./View.js', '../converters/DataConverter.js'], function (_expo
             </tfoot>
         </table>`;
                 }
-            }
+            };
 
             _export('NegociacoesView', NegociacoesView);
         }

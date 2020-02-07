@@ -1,6 +1,17 @@
 export class HttpService {
 
-    get (url) {
+    _handleErros(res) {
+        if (!res.ok) throw new Error(res.statusText);
+        return res;
+    }
+
+    get(url) {
+        return fetch(url)
+                .then(res => this._handleErros(res))
+                .then(res => res.json());
+    }
+
+    /*get (url) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open("GET", url);
@@ -15,5 +26,5 @@ export class HttpService {
             };
             xhr.send();
         });
-    }
+    }*/
 }

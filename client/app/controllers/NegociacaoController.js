@@ -1,7 +1,7 @@
 System.register(['../domain/index.js', '../ui/index.js', '../util/index.js'], function (_export, _context) {
     "use strict";
 
-    var Negociacoes, NegociacaoService, Negociacao, NegociacoesView, MensagemView, Mensagem, DataInvalidaException, DataConverter, getNegociacaoDao, Bind;
+    var Negociacoes, NegociacaoService, Negociacao, NegociacoesView, MensagemView, Mensagem, DataConverter, getNegociacaoDao, Bind, getExceptionMessage, debounce, controller;
     return {
         setters: [function (_domainIndexJs) {
             Negociacoes = _domainIndexJs.Negociacoes;
@@ -11,27 +11,67 @@ System.register(['../domain/index.js', '../ui/index.js', '../util/index.js'], fu
             NegociacoesView = _uiIndexJs.NegociacoesView;
             MensagemView = _uiIndexJs.MensagemView;
             Mensagem = _uiIndexJs.Mensagem;
-            DataInvalidaException = _uiIndexJs.DataInvalidaException;
             DataConverter = _uiIndexJs.DataConverter;
         }, function (_utilIndexJs) {
             getNegociacaoDao = _utilIndexJs.getNegociacaoDao;
             Bind = _utilIndexJs.Bind;
+            getExceptionMessage = _utilIndexJs.getExceptionMessage;
+            debounce = _utilIndexJs.debounce;
+            controller = _utilIndexJs.controller;
         }],
         execute: function () {
-            class NegociacaoController {
+            function _applyDecoratedDescriptor(target, property, decorators, descriptor, context) {
+                var desc = {};
+                Object['ke' + 'ys'](descriptor).forEach(function (key) {
+                    desc[key] = descriptor[key];
+                });
+                desc.enumerable = !!desc.enumerable;
+                desc.configurable = !!desc.configurable;
 
-                constructor() {
-                    const $ = document.querySelector.bind(document);
-                    this._inputData = $("#data");
-                    this._inpuQuantidade = $("#quantidade");
-                    this._inputValor = $("#valor");
+                if ('value' in desc || desc.initializer) {
+                    desc.writable = true;
+                }
+
+                desc = decorators.slice().reverse().reduce(function (desc, decorator) {
+                    return decorator(target, property, desc) || desc;
+                }, desc);
+
+                if (context && desc.initializer !== void 0) {
+                    desc.value = desc.initializer ? desc.initializer.call(context) : void 0;
+                    desc.initializer = undefined;
+                }
+
+                if (desc.initializer === void 0) {
+                    Object['define' + 'Property'](target, property, desc);
+                    desc = null;
+                }
+
+                return desc;
+            }
+
+            var _dec, _dec2, _dec3, _class, _desc, _value, _class2;
+
+            let NegociacaoController = (_dec = controller('#data', '#quantidade', '#valor'), _dec2 = debounce(1500), _dec3 = debounce(), _dec(_class = (_class2 = class NegociacaoController {
+
+                constructor(_inputData, _inputQuantidade, _inputValor) {
+                    Object.assign(this, { _inputData, _inputQuantidade, _inputValor });
+                    //const $ = document.querySelector.bind(document);
+                    /*this._inputData = _inputData; //$("#data");
+                    this._inpuQuantidade = inputQuantidade; // $("#quantidade");
+                    this._inputValor = inputValor; // $("#valor");*/
                     this._negociacoes = new Bind(new Negociacoes(), new NegociacoesView("#negociacoes"), 'adiciona', 'esvazia');
                     this._mensagem = new Bind(new Mensagem(), new MensagemView("#mensagemView"), 'texto');
                     this._service = new NegociacaoService();
                     this._init();
                 }
-                _init() {
-                    getNegociacaoDao().then(dao => dao.listaTodos()).then(negociacoes => negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao))).catch(err => this._mensagem.texto = err);
+                async _init() {
+                    try {
+                        const dao = await getNegociacaoDao();
+                        const negociacoes = await dao.listaTodos();
+                        negociacoes.forEach(negociacao => this._negociacoes.adiciona(negociacao));
+                    } catch (err) {
+                        this._mensagem.texto = getExceptionMessage(err);
+                    }
                 }
                 _criaNegociacao() {
                     let data = DataConverter.paraData(this._inputData.value);
@@ -43,41 +83,44 @@ System.register(['../domain/index.js', '../ui/index.js', '../util/index.js'], fu
                     this._inputValor.value = 0.0;
                     this._inputData.focus();
                 }
-                importaNegociacoes() {
-                    this._service.obterNegociacoesDoPeriodo().then(negociacoes => {
+
+                async importaNegociacoes() {
+                    try {
+                        const negociacoes = await this._service.obterNegociacoesDoPeriodo();
                         negociacoes.filter(novaNegociacao => !this._negociacoes.paraArray().some(negociacaoExistente => novaNegociacao.equals(negociacaoExistente))).forEach(negociacao => this._negociacoes.adiciona(negociacao));
                         this._mensagem.texto = 'Negociações do período importadas com sucesso';
-                    }).catch(err => this._mensagem.texto = err);
+                    } catch (err) {
+                        this._mensagem.texto = getExceptionMessage(err);
+                    }
                 }
-                adiciona(event) {
+
+                async adiciona(event) {
                     try {
                         event.preventDefault();
                         const negociacao = this._criaNegociacao();
 
-                        getNegociacaoDao().then(dao => dao.adiciona(negociacao)).then(() => {
-                            this._negociacoes.adiciona(negociacao);
-                            this._mensagem.texto = "Negociação incluída com sucesso!";
-                            this._limpaFormulario();
-                        }).catch(err => this._mensagem.texto = err);
+                        const dao = await getNegociacaoDao();
+                        await dao.adiciona(negociacao);
+                        this._negociacoes.adiciona(negociacao);
+                        this._mensagem.texto = "Negociação incluída com sucesso!";
+                        this._limpaFormulario();
                     } catch (e) {
-                        console.error(e);
-                        console.log(e.stack);
-                        if (e instanceof DataInvalidaException) {
-                            this._mensagem.texto = e.message;
-                        } else {
-                            this._mensagem.texto = "Um erro inesperado aconteceu. Entre em contato com o suporte. Ref: adiciona()";
-                        }
+                        this._mensagem.texto = getExceptionMessage(err);
                     }
                 }
 
-                apaga() {
-                    getNegociacaoDao().then(dao => dao.apagaTodos()).then(() => {
+                async apaga() {
+                    try {
+                        const dao = await getNegociacaoDao();
+                        await dao.apagaTodos();
                         this._negociacoes.esvazia();
                         this._mensagem.texto = "Negociações apagadas com sucesso";
-                    }).catch(err => this._mensagem.texto = err);
+                    } catch (err) {
+                        this._mensagem.texto = getExceptionMessage(err);
+                    }
                 }
 
-            }
+            }, (_applyDecoratedDescriptor(_class2.prototype, 'importaNegociacoes', [_dec2], Object.getOwnPropertyDescriptor(_class2.prototype, 'importaNegociacoes'), _class2.prototype), _applyDecoratedDescriptor(_class2.prototype, 'adiciona', [_dec3], Object.getOwnPropertyDescriptor(_class2.prototype, 'adiciona'), _class2.prototype)), _class2)) || _class);
 
             _export('NegociacaoController', NegociacaoController);
         }
