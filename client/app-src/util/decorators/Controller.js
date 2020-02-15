@@ -22,7 +22,7 @@ export function controller(...seletores) {
 
 function associaEvento(instance, metadado) {
     document
-        .querySelector(metadado.seletor)
+        .querySelector(metadado.selector)
         .addEventListener(metadado.event, event => {
             if (metadado.prevent) event.preventDefault();
             instance[metadado.propertyKey](event);
